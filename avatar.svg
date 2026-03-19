@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00d4a0"/>
+      <stop offset="100%" stop-color="#00a87d"/>
+    </linearGradient>
+  </defs>
+  <!-- Head shape -->
+  <ellipse cx="100" cy="105" rx="62" ry="68" fill="url(#g1)"/>
+  <!-- Left eye ridge -->
+  <ellipse cx="68" cy="72" rx="24" ry="18" fill="#00eab0" opacity="0.6"/>
+  <!-- Right eye ridge -->
+  <ellipse cx="132" cy="72" rx="24" ry="18" fill="#00eab0" opacity="0.6"/>
+  <!-- Left eye -->
+  <ellipse cx="72" cy="76" rx="12" ry="14" fill="#0a0a0f"/>
+  <ellipse cx="74" cy="76" rx="5" ry="11" fill="#00d4a0"/>
+  <ellipse cx="75" cy="73" rx="2" ry="3" fill="#b0fff0"/>
+  <!-- Right eye -->
+  <ellipse cx="128" cy="76" rx="12" ry="14" fill="#0a0a0f"/>
+  <ellipse cx="130" cy="76" rx="5" ry="11" fill="#00d4a0"/>
+  <ellipse cx="131" cy="73" rx="2" ry="3" fill="#b0fff0"/>
+  <!-- Snout -->
+  <ellipse cx="100" cy="120" rx="30" ry="20" fill="#00c494" opacity="0.5"/>
+  <!-- Nostrils -->
+  <circle cx="88" cy="112" r="3" fill="#0a0a0f" opacity="0.5"/>
+  <circle cx="112" cy="112" r="3" fill="#0a0a0f" opacity="0.5"/>
+  <!-- Mouth line -->
+  <path d="M 75 132 Q 100 142 125 132" stroke="#0a0a0f" stroke-width="2" fill="none" opacity="0.4"/>
+  <!-- Scale pattern hints -->
+  <circle cx="60" cy="130" r="4" fill="#00eab0" opacity="0.2"/>
+  <circle cx="140" cy="130" r="4" fill="#00eab0" opacity="0.2"/>
+  <circle cx="100" cy="150" r="4" fill="#00eab0" opacity="0.2"/>
+  <circle cx="80" cy="145" r="3" fill="#00eab0" opacity="0.15"/>
+  <circle cx="120" cy="145" r="3" fill="#00eab0" opacity="0.15"/>
+</svg>
