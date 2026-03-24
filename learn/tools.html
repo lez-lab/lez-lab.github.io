@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tooling — Learn LEZ</title>
+  <meta name="description" content="Everything in the LEZ ecosystem — frameworks, scaffolding, explorers, registries, wallet, and running a local node.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦎</text></svg>">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .topic-page { max-width: 720px; margin: 0 auto; padding: 60px 0; }
+    .topic-page h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 24px; }
+    .topic-page h2 { font-size: 1.3rem; font-weight: 700; margin: 36px 0 12px; color: var(--text); }
+    .topic-page h3 { font-size: 1.05rem; font-weight: 600; margin: 24px 0 8px; color: var(--accent); }
+    .topic-page p { color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
+    .topic-page code { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: var(--mono); font-size: 0.85em; color: var(--accent); }
+    .topic-page pre { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-x: auto; margin: 16px 0 24px; }
+    .topic-page pre code { background: none; border: none; padding: 0; color: var(--text); font-size: 0.9rem; }
+    .topic-page ul, .topic-page ol { color: var(--muted); padding-left: 24px; margin-bottom: 16px; line-height: 1.7; }
+    .topic-page li { margin-bottom: 6px; }
+    .topic-page a { color: var(--accent); }
+    .nav-back { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 32px; transition: color 0.2s; }
+    .nav-back:hover { color: var(--text); }
+    .tool-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 12px; }
+    .tool-card h3 { margin: 0 0 6px; font-size: 1rem; }
+    .tool-card p { margin: 0 0 8px; font-size: 0.9rem; }
+    .tool-card a { font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <a href="/" class="nav-brand">🦎 LEZ Lab</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/learn/" class="active">Learn</a></li>
+        <li><a href="https://github.com/lez-lab" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="topic-page">
+      <a href="/learn/" class="nav-back">← Back to Learn</a>
+
+      <h1>Tooling</h1>
+
+      <p>An overview of the tools available for building, testing, and exploring the Logos Execution Zone.</p>
+
+      <h2>Development Frameworks</h2>
+
+      <div class="tool-card">
+        <h3>lez-framework</h3>
+        <p>The <code>#[lez_program]</code> macro and supporting crates for writing LEZ programs in Rust. Handles Risc0 guest setup, input deserialization, output serialization, and PDA derivation. The standard starting point for any LEZ program.</p>
+        <a href="https://github.com/logos-co/lez-framework" target="_blank" rel="noopener">logos-co/lez-framework →</a>
+      </div>
+
+      <div class="tool-card">
+        <h3>SPEL</h3>
+        <p>Smart Program Execution Language — a higher-level framework on top of lez-framework. More ergonomic developer experience with better tooling for account management, testing, and deployment.</p>
+        <a href="https://github.com/logos-co/spel" target="_blank" rel="noopener">logos-co/spel →</a>
+      </div>
+
+      <div class="tool-card">
+        <h3>lezard</h3>
+        <p>An alternative framework by Andrea Franz for building, testing, and deploying LEZ programs. Worth exploring if lez-framework feels too low-level.</p>
+        <a href="https://github.com/gravityblast/lezard" target="_blank" rel="noopener">gravityblast/lezard →</a>
+      </div>
+
+      <h2>Scaffolding and Project Setup</h2>
+
+      <div class="tool-card">
+        <h3>logos-scaffold</h3>
+        <p>CLI tool that bootstraps a complete Logos application environment. Sets up the full stack — LEZ node, wallet, and application layer — in one command. The fastest way to get a local development environment running.</p>
+        <a href="https://github.com/logos-co/logos-scaffold" target="_blank" rel="noopener">logos-co/logos-scaffold →</a>
+      </div>
+
+      <h2>Learning Tools</h2>
+
+      <div class="tool-card">
+        <h3>CryptoLizards</h3>
+        <p>Interactive LEZ programming tutorial modeled after CryptoZombies. Teaches LEZ program development step-by-step through hands-on exercises. Best starting point if you are new to LEZ.</p>
+        <a href="https://github.com/KindaInsecureBot/cryptolizards" target="_blank" rel="noopener">KindaInsecureBot/cryptolizards →</a>
+      </div>
+
+      <div class="tool-card">
+        <h3>lez-code-explorer</h3>
+        <p>Interactive code explorer for LEZ blockchain programs. Browse and understand LEZ program source code with context.</p>
+        <a href="https://github.com/KindaInsecureBot/lez-code-explorer" target="_blank" rel="noopener">KindaInsecureBot/lez-code-explorer →</a>
+      </div>
+
+      <div class="tool-card">
+        <h3>spel-agent-resources</h3>
+        <p>Comprehensive SPEL documentation including tutorials, reference docs, and an AI agent skill for working with LEZ programs.</p>
+        <a href="https://github.com/KindaInsecureBot/spel-agent-resources" target="_blank" rel="noopener">KindaInsecureBot/spel-agent-resources →</a>
+      </div>
+
+      <h2>Program Registry</h2>
+
+      <div class="tool-card">
+        <h3>SPELbook</h3>
+        <p>On-chain program registry for LEZ. Enables program discovery by storing IDL metadata on-chain. Analogous to an npm registry for LEZ programs.</p>
+        <a href="https://github.com/jimmy-claw/spelbook" target="_blank" rel="noopener">jimmy-claw/spelbook →</a>
+      </div>
+
+      <h2>Wallet and Indexer</h2>
+
+      <div class="tool-card">
+        <h3>logos-execution-zone-wallet-ui</h3>
+        <p>The official wallet UI for LEZ. Supports creating accounts, token transfers, private transactions, and interacting with programs.</p>
+        <a href="https://github.com/logos-blockchain/logos-execution-zone-wallet-ui" target="_blank" rel="noopener">logos-blockchain/logos-execution-zone-wallet-ui →</a>
+      </div>
+
+      <div class="tool-card">
+        <h3>logos-execution-zone-module</h3>
+        <p>The Logos Core module wrapping the LEZ indexer. Provides block, account, and transaction queries. Used by the Logos desktop application.</p>
+        <a href="https://github.com/logos-blockchain/logos-execution-zone-module" target="_blank" rel="noopener">logos-blockchain/logos-execution-zone-module →</a>
+      </div>
+
+      <h2>Running a Local Node</h2>
+
+      <pre><code># Using logos-scaffold (recommended)
+logos-scaffold init my-project
+cd my-project
+logos-scaffold start
+
+# Or directly with Docker
+git clone https://github.com/logos-blockchain/logos-execution-zone
+cd logos-execution-zone
+docker compose up</code></pre>
+
+      <p>The sequencer API is available at <code>localhost:8080</code> by default. The indexer JSON-RPC API is at <code>localhost:8081</code>.</p>
+
+      <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border);">
+        <a href="programs.html" style="color: var(--muted); text-decoration: none; font-size: 0.9rem;">← Writing Programs</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

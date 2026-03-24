@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writing Programs — Learn LEZ</title>
+  <meta name="description" content="The LEZ program model, lez-framework, SPEL, PDAs, cross-program calls, and built-in programs.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦎</text></svg>">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .topic-page { max-width: 720px; margin: 0 auto; padding: 60px 0; }
+    .topic-page h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 24px; }
+    .topic-page h2 { font-size: 1.3rem; font-weight: 700; margin: 36px 0 12px; color: var(--text); }
+    .topic-page h3 { font-size: 1.05rem; font-weight: 600; margin: 24px 0 8px; color: var(--accent); }
+    .topic-page p { color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
+    .topic-page code { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: var(--mono); font-size: 0.85em; color: var(--accent); }
+    .topic-page pre { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-x: auto; margin: 16px 0 24px; }
+    .topic-page pre code { background: none; border: none; padding: 0; color: var(--text); font-size: 0.9rem; }
+    .topic-page ul, .topic-page ol { color: var(--muted); padding-left: 24px; margin-bottom: 16px; line-height: 1.7; }
+    .topic-page li { margin-bottom: 6px; }
+    .topic-page a { color: var(--accent); }
+    .nav-back { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 32px; transition: color 0.2s; }
+    .nav-back:hover { color: var(--text); }
+    .resource-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin: 16px 0 24px; }
+    .resource-link { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; text-decoration: none; color: var(--muted); font-size: 0.85rem; transition: border-color 0.2s; display: block; }
+    .resource-link:hover { border-color: var(--accent); color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <a href="/" class="nav-brand">🦎 LEZ Lab</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/learn/" class="active">Learn</a></li>
+        <li><a href="https://github.com/lez-lab" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="topic-page">
+      <a href="/learn/" class="nav-back">← Back to Learn</a>
+
+      <h1>Writing Programs</h1>
+
+      <p>A LEZ program is a RISC-V binary that runs inside the Risc0 zkVM. It receives accounts and instruction data as input, performs arbitrary computation, and returns updated account states along with optional calls to other programs.</p>
+
+      <h2>The Program Model</h2>
+
+      <p>Programs in LEZ are stateless black boxes. They receive accounts as input, modify them according to their logic, and return the result. They have no direct access to global state unless it is passed as an input account.</p>
+
+      <p>The protocol enforces these invariants on every program output:</p>
+      <ul>
+        <li>Account IDs are unique in the input set</li>
+        <li>The number of pre-states and post-states must match</li>
+        <li>Account nonces must remain unchanged</li>
+        <li>Program ownership of accounts cannot change (except via the claim mechanism)</li>
+        <li>Only the owning program can decrease an account's balance or modify its data</li>
+        <li>Total balance must be conserved across all accounts in the call</li>
+      </ul>
+
+      <p>If a program violates any of these rules, the transaction is rejected. This applies identically to public and private execution.</p>
+
+      <h2>Building with lez-framework</h2>
+
+      <p>The <code>lez-framework</code> crate provides a <code>#[lez_program]</code> macro that handles the boilerplate, letting you focus on program logic:</p>
+
+      <pre><code>use lez_framework::lez_program;
+
+#[lez_program]
+fn my_program(accounts: Vec&lt;Account&gt;, instruction: MyInstruction) -&gt; Vec&lt;Account&gt; {
+    // your logic here
+    accounts
+}</code></pre>
+
+      <p>The macro handles serialization, the Risc0 guest environment, and <code>ProgramOutput</code> construction. Repository: <a href="https://github.com/logos-co/lez-framework" target="_blank" rel="noopener">logos-co/lez-framework</a></p>
+
+      <h2>SPEL</h2>
+
+      <p>SPEL (Smart Program Execution Language) is a higher-level framework for writing LEZ programs. It provides a more ergonomic interface with built-in support for account management, cross-program calls, and testing.</p>
+
+      <p>Repository: <a href="https://github.com/logos-co/spel" target="_blank" rel="noopener">logos-co/spel</a> · Documentation: <a href="https://github.com/KindaInsecureBot/spel-agent-resources" target="_blank" rel="noopener">spel-agent-resources</a></p>
+
+      <h2>Cross-Program Calls</h2>
+
+      <p>Programs can call other programs atomically by including <code>ChainedCall</code> structs in their output:</p>
+
+      <pre><code>ChainedCall {
+    program_id:       TOKEN_PROGRAM_ID,
+    pre_states:       vec![user_account, vault_account],
+    instruction_data: encode(&Transfer { amount: 100 }),
+    pda_seeds:        vec![],
+}</code></pre>
+
+      <p>Calls execute depth-first. All calls in the chain are atomic — a failure at any step rolls back the entire transaction. This is the mechanism behind flash loans and any multi-step DeFi operation.</p>
+
+      <h2>Program-Derived Accounts (PDAs)</h2>
+
+      <p>Programs can own accounts whose IDs are derived from the program ID and a seed value. This is how programs hold shared state — liquidity pools, vaults, registries — without requiring a user signature.</p>
+
+      <p>When a program emits a chained call with PDA seeds, the execution layer grants authorization for those derived accounts automatically.</p>
+
+      <h2>Account Ownership and the Claim Mechanism</h2>
+
+      <p>Every account has a <code>program_owner</code> field. Only the owning program can decrease the account's balance or modify its data.</p>
+
+      <p>A program can claim any account that currently has the default owner (<code>[0; 8]</code>) by setting the <code>claim</code> flag in its output. After claiming, the account's <code>program_owner</code> is set to the claiming program's ID. This is how programs create new accounts they control.</p>
+
+      <h2>Built-In Programs</h2>
+
+      <h3>Token Program</h3>
+      <p>Manages fungible tokens and NFTs. Supports: initialize, mint, burn, transfer, print_nft. The token program is privacy-agnostic — it handles both public and private token accounts identically.</p>
+
+      <h3>AMM Program</h3>
+      <p>Constant-product AMM with liquidity pools. Supports: new_definition, add_liquidity, remove_liquidity, swap. The AMM chains to the token program for all balance transfers, emitting 2 token calls per swap.</p>
+
+      <h3>Authenticated Transfer Program</h3>
+      <p>Direct account-to-account transfers with ECDSA signature verification. Used in tutorials and as a reference implementation.</p>
+
+      <h2>Learning Resources</h2>
+
+      <div class="resource-grid">
+        <a href="https://github.com/KindaInsecureBot/cryptolizards" target="_blank" rel="noopener" class="resource-link">🦎 CryptoLizards — interactive tutorial</a>
+        <a href="https://github.com/KindaInsecureBot/spel-agent-resources" target="_blank" rel="noopener" class="resource-link">📚 SPEL documentation</a>
+        <a href="https://github.com/logos-blockchain/lez-programs" target="_blank" rel="noopener" class="resource-link">📦 Official example programs</a>
+        <a href="https://github.com/gravityblast/lezard" target="_blank" rel="noopener" class="resource-link">🛠️ lezard framework</a>
+      </div>
+
+      <div style="margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; gap: 24px;">
+        <a href="execution.html" style="color: var(--muted); text-decoration: none; font-size: 0.9rem;">← Execution Model</a>
+        <a href="tools.html" style="color: var(--muted); text-decoration: none; font-size: 0.9rem; margin-left: auto;">Tooling →</a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
