@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Accounts & Keys — Learn LEZ</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦎</text></svg>">
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .topic-page { max-width: 720px; margin: 0 auto; padding: 60px 0; }
+    .topic-page h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 24px; }
+    .topic-page h2 { font-size: 1.3rem; font-weight: 700; margin: 36px 0 12px; color: var(--text); }
+    .topic-page h3 { font-size: 1.05rem; font-weight: 600; margin: 24px 0 8px; color: var(--accent); }
+    .topic-page p { color: var(--muted); line-height: 1.7; margin-bottom: 16px; }
+    .topic-page code { background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: var(--mono); font-size: 0.85em; color: var(--accent); }
+    .topic-page pre { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; overflow-x: auto; margin: 16px 0 24px; }
+    .topic-page pre code { background: none; border: none; padding: 0; color: var(--text); font-size: 0.9rem; }
+    .topic-page ul, .topic-page ol { color: var(--muted); padding-left: 24px; margin-bottom: 16px; line-height: 1.7; }
+    .topic-page li { margin-bottom: 6px; }
+    .topic-page a { color: var(--accent); }
+    .nav-back { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); text-decoration: none; font-size: 0.9rem; margin-bottom: 32px; transition: color 0.2s; }
+    .nav-back:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="container">
+      <a href="/" class="nav-brand">🦎 LEZ Lab</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/learn/" class="active">Learn</a></li>
+        <li><a href="https://github.com/lez-lab" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container">
+    <div class="topic-page">
+      <a href="/learn/" class="nav-back">← Back to Learn</a>
+      <h1>Accounts in LEZ</h1>
+
+<h2>Account Structure</h2>
+
+<p>Every account in LEZ, whether public or private, shares the same schema:</p>
+
+<pre><code>
+struct Account {
+    program_owner: ProgramId,   // [u32; 8] — the program that controls this account's data
+    balance: u128,              // native token balance
+    data: Data,                 // arbitrary byte string (max 100KB)
+    nonce: u128,                // serves different purposes for public vs private accounts
+}
+</code></pre>
+
+<p>An account that has never been touched has default values: zero balance, empty data, default program owner (<code>[0; 8]</code>), and zero nonce. The protocol treats the entire AccountId space as occupied — uninitialized accounts simply have default values and are not explicitly stored.</p>
+
+<h2>Public Accounts</h2>
+
+<h3>AccountId Derivation</h3>
+
+<p>A public account's identity is derived from its owner's secp256k1 public key:</p>
+
+<pre><code>
+AccountId = SHA256("/LSSA/v0.3/AccountId/Public/" || public_key)
+</code></pre>
+
+<p>The public key is used for BIP-340 Schnorr signatures that authorize transactions involving the account.</p>
+
+<h3>Nonce</h3>
+
+<p>For public accounts, the nonce is a sequential counter that tracks the number of transactions the account has signed. Each time the account's owner signs a transaction, the nonce increments by one after the transaction is accepted. This prevents replay attacks: a transaction signed with nonce N is only valid when the account's current nonce is exactly N.</p>
+
+<h3>Authorization</h3>
+
+<p>Public account authorization works through digital signatures. When a transaction references a public account that requires authorization (typically the sender in a transfer), the account owner signs the transaction message with their private key. The sequencer verifies the BIP-340 Schnorr signature against the account's public key.</p>
+
+<p>The <code>is_authorized</code> flag in <code>AccountWithMetadata</code> is set to <code>true</code> for any account whose owner provided a valid signature in the transaction's witness set.</p>
+
+<h3>Program Ownership</h3>
+
+<p>The <code>program_owner</code> field determines which program can modify the account's <code>data</code> and decrease its <code>balance</code>. An account with the default program owner (<code>[0; 8]</code>) is uninitialized and can be claimed by any program through the claiming mechanism. Once claimed, only the owning program can modify its data.</p>
+
+<p>Any program can increase an account's balance (credit tokens to it), but only the owning program can decrease the balance (debit tokens from it).</p>
+
+<h2>Private Accounts</h2>
+
+<p>Private accounts use the same <code>Account</code> struct but are represented on-chain differently. Instead of storing the account data in the clear, the chain stores a cryptographic commitment — a hash that binds the data to its owner without revealing either.</p>
+
+<h3>Key Material</h3>
+
+<p>A private account is controlled by three key components:</p>
+
+<p><strong>Nullifier Secret Key (nsk)</strong>: A 32-byte secret that represents spending authority. The nsk is used to derive nullifiers when spending or updating the account. It never leaves the owner's machine. Possession of the nsk is what it means to "own" a private account.</p>
+
+<p><strong>Nullifier Public Key (npk)</strong>: Derived from the nsk. Used as the account's identity and included in commitment computations.</p>
+
+<p><strong>Incoming Viewing Key Pair (isk / ipk)</strong>: A secp256k1 scalar/point pair used for Diffie-Hellman key exchange. The incoming viewing public key (ipk) is shared with senders so they can encrypt account data that only the recipient can decrypt. The incoming viewing secret key (isk) is used to derive the shared secret needed for decryption.</p>
+
+<h3>AccountId Derivation</h3>
+
+<p>A private account's identity is derived from its nullifier public key:</p>
+
+<pre><code>
+AccountId = SHA256("/LSSA/v0.3/AccountId/Private/" || npk)
+</code></pre>
+
+<h3>Nonce</h3>
+
+<p>For private accounts, the nonce serves a completely different purpose than for public accounts. It is a pseudorandom blinding factor that ensures each commitment is unique, even if the account data has not changed. The nonce is derived iteratively:</p>
+
+<ul>
+<li>Initial nonce: <code>SHA256(npk)</code> (technically <code>private_account_nonce_init</code>)</li>
+<li>Subsequent nonces: <code>SHA256(nsk || previous_nonce)</code></li>
+</ul>
+
+<p>This derivation is deterministic given the keys, which means the account owner can always reconstruct their nonce sequence.</p>
+
+<h3>Authorization</h3>
+
+<p>Private accounts do not use digital signatures for authorization. Instead, authorization is proven by knowledge of the nullifier secret key. When spending a private account, the user computes a nullifier that can only be produced with the correct nsk. The zero-knowledge proof attests that the nullifier was correctly derived without revealing the nsk itself.</p>
+
+<h2>CommitmentSet</h2>
+
+<p>The CommitmentSet is the on-chain data structure that stores all active private account commitments. It is implemented as a Merkle tree.</p>
+
+<h3>Commitment Computation</h3>
+
+<p>A commitment binds the account data to its owner:</p>
+
+<pre><code>
+Commitment = SHA256(
+    "/LSSA/v0.3/Commitment/" ||
+    npk ||
+    program_owner ||
+    balance_le ||
+    nonce_le ||
+    SHA256(data)
+)
+</code></pre>
+
+<p>The commitment is unconditionally hiding because the nonce acts as a random blinding factor. Even if an observer knows the program owner and suspects a particular balance, they cannot verify their guess because they do not know the nonce.</p>
+
+<h3>Membership Proofs</h3>
+
+<p>When spending a private account, the user must prove that the account's commitment exists in the CommitmentSet. This is done via a Merkle membership proof — a path from the commitment's leaf to the tree root, consisting of sibling hashes at each level.</p>
+
+<p>The CommitmentSet maintains a history of root hashes. This allows proofs generated against a slightly stale root to remain valid even if new commitments have been inserted since the proof was computed. Without root history, concurrent private transactions would frequently invalidate each other.</p>
+
+<h2>NullifierSet</h2>
+
+<p>The NullifierSet is a set of all nullifiers that have been revealed on-chain. Its purpose is to prevent double-spending: each commitment can only be consumed once.</p>
+
+<h3>Nullifier Computation</h3>
+
+<p>There are two nullifier types:</p>
+
+<p><strong>Initialization nullifier</strong> — used when a private account is created for the first time:</p>
+
+<pre><code>
+Nullifier = SHA256("/LSSA/v0.3/Nullifier/Initialize/" || npk)
+</code></pre>
+
+<p><strong>Update nullifier</strong> — used when an existing private account's state is modified:</p>
+
+<pre><code>
+Nullifier = SHA256("/LSSA/v0.3/Nullifier/Update/" || commitment || nsk)
+</code></pre>
+
+<p>The update nullifier requires the nsk, which means only the account owner can produce it. The commitment links the nullifier to a specific state, and the nsk proves ownership. An observer who sees a nullifier on-chain cannot determine which commitment it corresponds to without knowing the nsk.</p>
+
+<h3>Double-Spend Prevention</h3>
+
+<p>When a transaction reveals a nullifier, the sequencer checks that it does not already exist in the NullifierSet. If it does, the transaction is rejected. After acceptance, the nullifier is added to the set permanently. This ensures each commitment can be spent exactly once.</p>
+
+<h2>Account Scanning with View Tags</h2>
+
+<p>When someone sends a private transfer to your account, the encrypted output is published on-chain along with a view tag. The view tag is a single byte computed as:</p>
+
+<pre><code>
+view_tag = SHA256("/NSSA/v0.2/ViewTag/" || npk || vpk)[0]
+</code></pre>
+
+<p>Wallet software scans new transactions by comparing each output's view tag against the expected value for the user's keys. Since the view tag is one byte, roughly 255 out of every 256 outputs are filtered out immediately. Only outputs with a matching view tag undergo the more expensive Diffie-Hellman and decryption steps.</p>
+
+<p>The encryption itself uses ECIES-style key agreement:</p>
+
+<p>1. The sender generates an ephemeral secret key (esk) and corresponding ephemeral public key (epk)</p>
+<p>2. A shared secret is computed via ECDH: <code>ss = ipk_recipient * esk_sender</code></p>
+<p>3. A symmetric key is derived via KDF: <code>key = SHA256("NSSA/v0.2/KDF-SHA256/" || ss || commitment || output_index)</code></p>
+<p>4. The account data is encrypted with ChaCha20 using the derived key</p>
+
+<p>The recipient computes the same shared secret using their isk and the sender's epk: <code>ss = epk_sender * isk_recipient</code>. This yields the same symmetric key, allowing decryption.</p>
+
+<h2>Owning vs Viewing</h2>
+
+<p>LEZ's key structure creates a natural separation between ownership and observation:</p>
+
+<p><strong>Owning an account</strong> requires the nullifier secret key (nsk). With the nsk, you can produce nullifiers to spend or update the account's state. You can also derive the npk and compute commitments.</p>
+
+<p><strong>Viewing an account</strong> requires the incoming viewing secret key (isk). With the isk (and the npk/vpk), you can detect incoming transfers via view tag matching and decrypt the encrypted account data. You can see the account's current state (balance, data, program owner) but you cannot spend it.</p>
+
+<p>This means a watch-only wallet can be constructed by sharing the isk without exposing the nsk. The watch-only wallet can track balances and transaction history but cannot authorize any state changes.</p>
+
+<h2>Program Derived Accounts (PDAs)</h2>
+
+<p>Some accounts are not owned by users but by programs. These use Program Derived Addresses:</p>
+
+<pre><code>
+PDA_AccountId = SHA256("/LSSA/v0.3/AccountId/PDA/" || program_id || seed)
+</code></pre>
+
+<p>PDAs are used for protocol-level accounts like AMM vaults and liquidity pool token definitions. When a program makes a chained call and provides PDA seeds, the called program automatically treats those PDA accounts as authorized. This enables programs to manage their own accounts without user signatures.</p>
+
+    </div>
+  </div>
+  <footer>
+    <div class="container">
+      <p>LEZ Lab · <a href="https://github.com/lez-lab" target="_blank" rel="noopener">GitHub</a> · <a href="/blog/">Blog</a></p>
+    </div>
+  </footer>
+</body>
+</html>
